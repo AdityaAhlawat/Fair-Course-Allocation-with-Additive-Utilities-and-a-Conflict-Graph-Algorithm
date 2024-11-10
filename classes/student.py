@@ -6,10 +6,15 @@ class Student:
 
     def __repr__(self):
         return (f"Student(id={self.student_id}, valuation_function={self.valuation_function}, credit_cap={self.credit_cap})")
-    
+   
     def utility(self, allocation):
+        # Ensure allocation[self.student_id] is a list
+        if isinstance(allocation.get(self.student_id, []), set):
+            allocation[self.student_id] = list(allocation[self.student_id])
+
+        # Calculate utility based on the valuation function
         return sum(self.valuation_function.get(course.course_id, 0) for course in allocation[self.student_id])
-    
+
     def get_credit_cap(self):
         return self.credit_cap
     

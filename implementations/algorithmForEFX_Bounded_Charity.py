@@ -10,45 +10,38 @@ def EFX_Allocation_With_Bounded_Charity(students, courses):
     # Main loop: Continue applying update rules while applicable
     while is_any_rule_applicable(students, allocation, pool, envy_graph):
         # Select an applicable rule (U0, U1, or U2)
-        if is_u0_applicable(students, allocation, pool):
-            print("U0 is being run")
+        if is_u0_applicable(students, allocation, pool, envy_graph):
             allocation, pool, affected_student = apply_u0(allocation, pool, students)
-        elif is_u2_applicable(students, allocation, pool, envy_graph):
-            print("U2 is being run")
-            allocation, pool, affected_student = apply_u2(students, allocation, pool, envy_graph)
         elif is_u1_applicable(students, allocation, pool):
-            print("U1 is being run")
             allocation, pool, affected_student = apply_u1(students, allocation, pool)
-        for student in students:
-            assigned_courses = allocation[student.student_id]
-            utility = student.utility(allocation)
-            course_details = [
-                f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
-                for course in assigned_courses
-            ]
-            valuation_function_details = {
-                course_id: value for course_id, value in student.valuation_function.items()
-            }
-            print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
-        print("Next Stage")
+        elif is_u2_applicable(students, allocation, pool, envy_graph):
+            allocation, pool, affected_student = apply_u2(students, allocation, pool, envy_graph)
         # Update the envy graph after applying the rule with the affected student
         if affected_student != None:
             envy_graph = update_envy_graph(envy_graph, students, allocation, affected_student)
 
     allocation['charity'] = pool  # Assign the remaining courses in the pool to 'charity'
-
+    
+    for student in students:
+        allocation['charity'].extend(list(set(allocation[student.get_id()]) - set(MWIS(student, allocation[student.get_id()]))))
     return allocation
 
 
 def is_any_rule_applicable(students, allocation, pool, envy_graph):
     # Check if any of the update rules (U0, U1, U2) are applicable
-    return is_u0_applicable(students, allocation, pool) or is_u1_applicable(students, allocation, pool) or is_u2_applicable(students, allocation, pool, envy_graph)
+    return is_u0_applicable(students, allocation, pool, envy_graph) or is_u1_applicable(students, allocation, pool) or is_u2_applicable(students, allocation, pool, envy_graph)
 
-def is_u0_applicable(students, allocation, pool):
+def is_u0_applicable(students, allocation, pool, envy_graph):
     # Check if U0 is applicable
+    nodes_with_incoming_edges = set()
+    for targets in envy_graph.values():
+        nodes_with_incoming_edges.update(targets)
+
+    # Step 2: Find students who have no incoming edges (i.e., they are not envied by anyone)
+    sources = [student for student in students if student.get_id() not in nodes_with_incoming_edges]
     for course in pool:
         #We need not look at all students but only the sources of envy graph -> Optimization
-        for student in students:
+        for student in sources:
             if can_allocate_good(student, course, allocation, students):
                 return True
     return False
@@ -61,6 +54,7 @@ def apply_u0(allocation, pool, students):
                 allocation[student.get_id()].append(course)
                 pool.remove(course)
                 return allocation, pool, student
+    print("yea")
     return allocation, pool, None
 
 
@@ -77,22 +71,20 @@ def apply_u1(students, allocation, pool):
     students_who_envy_pool_up_to_any_good = []
     for student in students:
         # Find the max course in the pool for the student's valuation
-        max_course_in_pool = max(pool, key=lambda course: student.valuation_function.get(course.course_id, 0))
-        pool_copy = pool.copy()
-        pool_copy.remove(max_course_in_pool)
-        
-        # Check if the student envies the pool copy more than their current allocation
-        if student_valuation(student, pool_copy) > student_valuation(student, allocation[student.get_id()]):
-            students_who_envy_pool_up_to_any_good.append(student)
+        for course in pool:
+            pool_copy = pool.copy()
+            # Check if the student envies the pool copy more than their current allocation
+            if student_valuation(student, pool_copy) > student_valuation(student, allocation[student.get_id()]):
+                students_who_envy_pool_up_to_any_good.append(student)
+                
     if len(students_who_envy_pool_up_to_any_good) == 0:
+        print("yea")
         return allocation, pool, None
     # Initialize variables to find the most envious agent and the minimal envied subset
     most_envious_agent = None
     minimal_envied_subset = None
-
     # Determine the maximum subset size needed, default to the length of the pool
     maxValueNecessary = len(pool)
-
     student = students_who_envy_pool_up_to_any_good[0]
     current_allocation_value = student_valuation(student, allocation[student.get_id()])
     breakOutOfMain = False
@@ -150,23 +142,22 @@ def apply_u1(students, allocation, pool):
     # If no agent was found who envies the pool, return the original allocation and pool
     return allocation, pool, None
 
-def find_most_envious_student_and_inclusion_wise_minimal_envied_subset(students, allocation, x_s_i_g_i):
+def find_most_envious_student_and_inclusion_wise_minimal_envied_subset(students, allocation, x_s_i_g_i, student_not_to_include):
     # Find all agents who envy the pool up to any good (EFX)
     students_who_envy_pool_up_to_any_good = []
-    print(x_s_i_g_i)
     for student in students:
-        # Find the max course in the pool for the student's valuation
-        max_course_in_pool = max(x_s_i_g_i, key=lambda course: student.valuation_function.get(course.course_id, 0))
-        pool_copy = x_s_i_g_i.copy()
-        pool_copy.remove(max_course_in_pool)
-        
-        # Check if the student envies the pool copy more than their current allocation
-        print(student_valuation(student, pool_copy), student_valuation(student, allocation[student.get_id()]))
-        if student_valuation(student, pool_copy) > student_valuation(student, allocation[student.get_id()]):
-            students_who_envy_pool_up_to_any_good.append(student)
-    if len(students_who_envy_pool_up_to_any_good) == 0:
-        print("yes")
-        return None, None
+        if student != student_not_to_include:
+            # Find the max course in the pool for the student's valuation
+            for course in x_s_i_g_i:
+                pool_copy = x_s_i_g_i.copy()
+                pool_copy.remove(course)
+                # Check if the student envies the pool copy more than their current allocation
+                if student_valuation(student, pool_copy) > student_valuation(student, allocation[student.get_id()]):
+                    students_who_envy_pool_up_to_any_good.append(student)
+            
+            # Check if the student envies the pool copy more than their current allocation
+            if student_valuation(student, pool_copy) > student_valuation(student, allocation[student.get_id()]):
+                students_who_envy_pool_up_to_any_good.append(student)
     # Initialize variables to find the most envious agent and the minimal envied subset
     most_envious_agent = None
     minimal_envied_subset = None
@@ -226,7 +217,7 @@ def is_u2_applicable(students, allocation, pool, envy_graph):
     num_students = len(students)
 
     # Check if Rule U0 is not applicable
-    if is_u0_applicable(students, allocation, pool):
+    if is_u0_applicable(students, allocation, pool, envy_graph):
         return False 
 
     # Check if the pool contains at least `n` goods
@@ -237,78 +228,131 @@ def is_u2_applicable(students, allocation, pool, envy_graph):
 
 def apply_u2(students, allocation, pool, envy_graph):
     # Initialize sources and cycle tracking
-    sources = [student for student in students if len(envy_graph[student.get_id()]) == 0]
+    nodes_with_incoming_edges = set()
+    for targets in envy_graph.values():
+        nodes_with_incoming_edges.update(targets)
+
+    # Step 2: Find students who have no incoming edges (i.e., they are not envied by anyone)
+    sources = [student for student in students if student.get_id() not in nodes_with_incoming_edges]
     distinct_goods = []
-    selected_sources = []
     most_envious_agents = []
     minimal_envied_subsets = []
-    cycle_detected = False
-    l = 0  # Length of the cycle
-
+    s_i = []
+    pool_copy = pool.copy()
     # Cycle detection and reallocation preparation
-    while sources and pool and not cycle_detected:
+    while sources and pool:
         current_source = sources.pop(0)
-        selected_sources.append(current_source)
-
-        # Assign a distinct good to the current source
-        good = pool.pop(0)
-        allocation[current_source.get_id()].append(good)
+        s_i.append(current_source)
+        good = pool_copy.pop(0)
         distinct_goods.append(good)
+        x_s_i = allocation[current_source.get_id()] + [good] 
 
         # Use find_most_envious_student_and_inclusion_wise_minimal_envied_subset
-        most_envious_agent, minimal_envied_subset = find_most_envious_student_and_inclusion_wise_minimal_envied_subset(students, allocation, allocation[current_source.get_id()])
-        
-        # Handle None return values to avoid errors
-        if most_envious_agent is None or minimal_envied_subset is None:
-            break  # Exit loop if no envious agent is found
-
+        most_envious_agent, minimal_envied_subset = find_most_envious_student_and_inclusion_wise_minimal_envied_subset(students, allocation, x_s_i, current_source)
         most_envious_agents.append(most_envious_agent)
         minimal_envied_subsets.append(minimal_envied_subset)
 
-        # Update the envy graph
-        envy_graph = update_envy_graph(envy_graph, students, allocation, current_source)
+        #Find C(S_i)
+        reachable_nodes = set(C(envy_graph, current_source, students))
+        if most_envious_agent in reachable_nodes:
+            path = find_path_bfs(envy_graph, current_source, most_envious_agent, students)
+            #Step 1: Update the pool P by excluding the required items
+            updated_pool = [g for g in pool if g not in distinct_goods]
+            for i in range(0, len(s_i)):
+                updated_pool.extend(list(set(allocation[s_i[i].get_id()]) - set([minimal_envied_subset[i]])))
+            #Second Step
+            for i in range(0, len(path)-1):
+                current_node = path[i]
+                next_node = path[i + 1]
+                allocation[current_node.get_id()] = allocation[next_node.get_id()]
+            allocation[most_envious_agent.get_id()] = minimal_envied_subset
+            envy_graph = update_envy_graph_fully(envy_graph, students, allocation)
+            return allocation, updated_pool, None
 
-        # Detect cycle in the envy graph
-        cycle = detect_single_cycle(envy_graph)
-        if cycle:
-            cycle_detected = True
-            l = len(cycle)
-            break
 
-    # If no cycle was detected, return
-    if not cycle_detected:
-        return allocation, pool, None
+def update_envy_graph_fully(envy_graph, students, allocation):
+    envy_graph.clear()
+    envy_graph.update({student.get_id(): [] for student in students})
 
-    # Step 1: Update the pool P by excluding the required items
-    updated_pool = [g for g in pool if g not in distinct_goods]
-    for i in range(l):
-        source_allocation = allocation[cycle[i].get_id()]
-        Z_i = minimal_envied_subsets[i]
-        updated_pool += [g for g in source_allocation if g not in Z_i]
+    # Recalculate envy relationships
+    for student in students:
+        student_id = student.get_id()
+        
+        # Calculate the total valuation for the student's allocation, defaulting to 0 if empty
+        student_valuation = sum(
+            student.valuation_function.get(course.course_id, 0) 
+            for course in allocation.get(student_id, [])
+        ) if allocation.get(student_id) else 0  # Default to 0 if no allocation exists
 
-    # Step 2: Reallocate goods along the cycle
-    for i in range(l):
-        si = cycle[i]
-        ti = cycle[(i + 1) % l]
+        # Check if the student envies any other student
+        for other_student in students:
+            other_student_id = other_student.get_id()
+            if other_student_id == student_id:
+                continue  # Skip self-comparison
 
-        # Step 2a: Find path in the envy graph from si to ti
-        path = find_path_in_envy_graph(envy_graph, si, ti)
+            # Calculate the valuation for the other student's allocation, defaulting to 0 if empty
+            other_student_valuation = sum(
+                student.valuation_function.get(course.course_id, 0) 
+                for course in allocation.get(other_student_id, [])
+            ) if allocation.get(other_student_id) else 0  # Default to 0 if no allocation exists
 
-        # Step 2b: Shift allocations along the path
-        for k in range(len(path) - 1):
-            current_node = path[k]
-            next_node = path[k + 1]
-            allocation[current_node.get_id()] = allocation[next_node.get_id()]
+            # If the student values the other student's bundle more, add an envy edge
+            if other_student_valuation > student_valuation:
+                envy_graph[student_id].append(other_student_id)
 
-    # Step 3: Assign the minimal envied subset to the final target node ti
-    # Set allocation for each ti in the cycle to Z_{i-1}, and all other j to their original allocation
-    for i in range(l):
-        ti = cycle[(i + 1) % l]  # Final target in the path for the current segment
-        allocation[ti.get_id()] = minimal_envied_subsets[i - 1]  # Set X0_ti = Z_{i-1}
+    return envy_graph
 
-    # Return the updated allocation and pool
-    return allocation, updated_pool, None
 
+
+def C(envy_graph, source, students):
+    reachable_nodes = set()
+    queue = [source]  # Initialize queue with the source object
+
+    while queue:
+        current = queue.pop(0)  # Use the first element for BFS traversal
+        current_id = current.get_id()  # Retrieve the ID of the current object
+
+        if current_id not in reachable_nodes:
+            reachable_nodes.add(current)  # Mark the current node's ID as visited
+
+            # Enqueue neighbors as objects if they haven’t been visited
+            for neighbor in envy_graph[current.get_id()]:
+                if students[neighbor-1] not in reachable_nodes:
+                    queue.append(students[neighbor-1])
+    return reachable_nodes
+
+def find_path_bfs(envy_graph, start, end, students):
+    if start == end:
+        return [start]
+
+    queue = [(start, [start])]  # Each element is (current_node, path_to_current_node)
+    visited = set([start.get_id()])  # To avoid revisiting nodes by storing IDs
+
+    while queue:
+        current, path = queue.pop(0)  # BFS traversal using the first element in queue
+        current_id = current.get_id()  # Retrieve ID of the current node object
+
+        # Explore neighbors in envy_graph
+        for neighbor_id in envy_graph.get(current_id, []):
+            neighbor = students[neighbor_id - 1]  # Access neighbor object by ID
+            
+            if neighbor == end:
+                return path + [end]  # Found the path to end
+            
+            if neighbor.get_id() not in visited:
+                visited.add(neighbor.get_id())
+                queue.append((neighbor, path + [neighbor]))
+
+    return None  # No path found
+
+
+def print_envy_graph(envy_graph):
+    print("Envy Graph:")
+    for student, envied_students in envy_graph.items():
+        if envied_students:
+            print(f"Student {student} envies: {', '.join(map(str, envied_students))}")
+        else:
+            print(f"Student {student} envies no one.")
 
 def update_envy_graph(G, students, allocation, affected_student):
     # Get the student whose allocation changed
@@ -499,3 +543,43 @@ def find_next_source_with_no_incoming_edges(selected_sources, envy_graph):
     
     # If no such source is found, return None
     return None
+
+def MWIS(student, courses):
+    n = len(courses)
+    if n == 0:
+        return []
+
+    credit_cap = student.get_credit_cap()
+    dp = [[0] * (credit_cap + 1) for _ in range(n + 1)]
+    selected_courses = [[[] for _ in range(credit_cap + 1)] for _ in range(n + 1)]
+    
+    # Sort courses by end time to use dynamic programming effectively
+    courses.sort(key=lambda x: x.end_time)
+    
+    for i in range(1, n + 1):
+        current_course = courses[i - 1]
+        current_utility = student.valuation_function.get(current_course.course_id, 0)
+        current_credits = current_course.credits  # Assuming each course has a credit value
+
+        for c in range(credit_cap + 1):
+            # Option 1: Exclude the current course
+            dp[i][c] = dp[i - 1][c]
+            selected_courses[i][c] = selected_courses[i - 1][c]
+            
+            # Option 2: Include the current course if it doesn't conflict and fits within the credit cap
+            if c >= current_credits:
+                for j in range(i - 1, 0, -1):
+                    if not conflicts(current_course, courses[j - 1]):
+                        potential_utility = dp[j][c - current_credits] + current_utility
+                        if potential_utility > dp[i][c]:
+                            dp[i][c] = potential_utility
+                            selected_courses[i][c] = selected_courses[j][c - current_credits] + [current_course]
+                        break
+                else:
+                    # No conflicts, consider it independently if credit cap allows
+                    if dp[i][c] < current_utility and c >= current_credits:
+                        dp[i][c] = current_utility
+                        selected_courses[i][c] = [current_course]
+    
+    # The result is the best set of courses considering all possibilities within the credit cap
+    return selected_courses[n][credit_cap]
