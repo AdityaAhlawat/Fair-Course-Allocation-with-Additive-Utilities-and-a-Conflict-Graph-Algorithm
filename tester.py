@@ -2,12 +2,14 @@ import time
 import matplotlib.pyplot as plt
 from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
-from implementations.checker import is_ef, is_ef1, is_efx
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
+from implementations.checker import is_ef, is_ef1, is_efx
+import csv
 
-data = Data(74, 30, total_school_time=30, reproducible=True)
+#Generate data instance without auto-generated data
+data = Data(40, 8000, total_school_time=30, reproducible=False)
 
-# Get students and courses
+#Graph of Time for Courses as they increase and fixed students (compared between both algorithms)
 students = data.get_students()
 courses = data.get_courses()
 start = time.time()

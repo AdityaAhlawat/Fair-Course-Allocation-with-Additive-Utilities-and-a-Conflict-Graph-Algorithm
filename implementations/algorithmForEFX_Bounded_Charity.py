@@ -6,7 +6,6 @@ def EFX_Allocation_With_Bounded_Charity(students, courses):
     allocation = {student.get_id(): [] for student in students}
     pool = courses[:]  # All courses initially in the pool
     envy_graph = {student.get_id(): [] for student in students}  # Empty envy graph
-
     # Main loop: Continue applying update rules while applicable
     while is_any_rule_applicable(students, allocation, pool, envy_graph):
         # Select an applicable rule (U0, U1, or U2)
@@ -24,6 +23,7 @@ def EFX_Allocation_With_Bounded_Charity(students, courses):
     
     for student in students:
         allocation['charity'].extend(list(set(allocation[student.get_id()]) - set(MWIS(student, allocation[student.get_id()]))))
+
     return allocation
 
 
@@ -54,7 +54,6 @@ def apply_u0(allocation, pool, students):
                 allocation[student.get_id()].append(course)
                 pool.remove(course)
                 return allocation, pool, student
-    print("yea")
     return allocation, pool, None
 
 
@@ -67,80 +66,56 @@ def is_u1_applicable(students, allocation, pool):
 
 
 def apply_u1(students, allocation, pool):
-    # Find all agents who envy the pool up to any good (EFX)
-    students_who_envy_pool_up_to_any_good = []
-    for student in students:
-        # Find the max course in the pool for the student's valuation
-        for course in pool:
-            pool_copy = pool.copy()
-            # Check if the student envies the pool copy more than their current allocation
-            if student_valuation(student, pool_copy) > student_valuation(student, allocation[student.get_id()]):
-                students_who_envy_pool_up_to_any_good.append(student)
-                
-    if len(students_who_envy_pool_up_to_any_good) == 0:
-        print("yea")
+    # Step 1: Identify an agent who envies the pool more than their own bundle
+    envious_agents = [st for st in students if student_valuation(st, pool) > student_valuation(st, allocation[st.get_id()])]
+    if not envious_agents:
+        # No agent envies the pool, so U1 does not apply
         return allocation, pool, None
-    # Initialize variables to find the most envious agent and the minimal envied subset
+
+    # S = pool (the initially envied set)
+    S = pool[:]
+    Z = S[:]  # Start with Z = S
+
+    # Step 2: Compute the minimal envied subset Z from S according to Algorithm 3
+    # We'll do exactly one pass over all agents and all goods in Z.
+    # As we remove goods, the set Z shrinks, and subsequent checks use the updated Z.
+    for i_stud in students:
+        X_i = allocation[i_stud.get_id()]
+        v_i_Xi = student_valuation(i_stud, X_i)
+
+        # Since we are going to remove goods from Z, iterate over a copy of Z
+        for g in Z[:]:  # Use a copy to avoid modifying Z while iterating
+            Z_minus_g = [x for x in Z if x != g]
+            if v_i_Xi < student_valuation(i_stud, Z_minus_g):
+                # Remove g immediately as per the algorithm
+                Z.remove(g)
+
+    # After the single pass, Z is an inclusion-wise minimal envied subset of S.
+    if not Z:
+        # If Z ends up empty, no minimal envied subset was found
+        return allocation, pool, None
+
+    # Step 3: Find an agent that envies Z more than her own bundle
     most_envious_agent = None
-    minimal_envied_subset = None
-    # Determine the maximum subset size needed, default to the length of the pool
-    maxValueNecessary = len(pool)
-    student = students_who_envy_pool_up_to_any_good[0]
-    current_allocation_value = student_valuation(student, allocation[student.get_id()])
-    breakOutOfMain = False
-    for subset_size in range(1, len(pool)):
-        for subset in combinations(pool, subset_size):
-            subset_list = list(subset)
-            # Check if this subset is envied by the current student
-            if student_valuation(student, subset_list) > current_allocation_value:
-                maxValueNecessary = len(subset_list)
-                breakOutOfMain = True
-                break
-        if breakOutOfMain == True:
-            break
-    # Generate subsets up to the determined maxValueNecessary size outside the second loop
-    subsets = []
-    for subset_size in range(1, maxValueNecessary + 1):
-        for subset in combinations(pool, subset_size):
-            subsets.append(list(subset))
-    foundValues = False
-    for student in students_who_envy_pool_up_to_any_good:
-        current_allocation_value = student_valuation(student, allocation[student.get_id()])
-        sorted_subsets = sorted(subsets, key=lambda subset: student_valuation(student, subset))
-        for subset_list in sorted_subsets:
-            if student_valuation(student, subset_list) > current_allocation_value:
-                valid = True
-                for different_student in students_who_envy_pool_up_to_any_good:
-                    if different_student != student:
-                        min_course_in_subset = min(subset_list, key=lambda course: different_student.valuation_function.get(course.course_id, 0))
-                        subset_copy = subset_list.copy()
-                        subset_copy.remove(min_course_in_subset)
-                        if student_valuation(different_student, subset_copy) > student_valuation(different_student, allocation[different_student.get_id()]):
-                            valid = False
-                            break
-                if valid == True:
-                    minimal_envied_subset = subset_list
-                    most_envious_agent = student
-                    foundValues = True
-                break
-        if foundValues == True:
+    for st in students:
+        if student_valuation(st, Z) > student_valuation(st, allocation[st.get_id()]):
+            most_envious_agent = st
             break
 
-    # If we found a most envious agent and a minimal envied subset
-    if most_envious_agent is not None and minimal_envied_subset is not None:
-        # Update the allocation: assign the minimal envied subset Z to the most envious agent
-        student_id = most_envious_agent.get_id()
-        new_allocation = allocation.copy()
-        new_allocation[student_id] = minimal_envied_subset
-        
-        # Update the pool by moving the previous allocation of the agent back to the pool and removing Z
-        new_pool = list(set(allocation[student_id] + pool) - set(minimal_envied_subset))
-        
-        # Return the updated allocation and pool
-        return new_allocation, new_pool, most_envious_agent
+    if not most_envious_agent:
+        # No agent envies Z, though we expected at least one
+        return allocation, pool, None
 
-    # If no agent was found who envies the pool, return the original allocation and pool
-    return allocation, pool, None
+    # Step 4: Reallocate Z to the most envious agent
+    old_allocation_for_agent = allocation[most_envious_agent.get_id()]
+    new_allocation = dict(allocation)
+    new_allocation[most_envious_agent.get_id()] = Z
+
+    # Update the pool: remove Z from pool and add the agent's old allocation back
+    new_pool = [c for c in pool if c not in Z]
+    new_pool += old_allocation_for_agent
+
+    return new_allocation, new_pool, most_envious_agent
 
 def find_most_envious_student_and_inclusion_wise_minimal_envied_subset(students, allocation, x_s_i_g_i, student_not_to_include):
     # Find all agents who envy the pool up to any good (EFX)
@@ -301,8 +276,6 @@ def update_envy_graph_fully(envy_graph, students, allocation):
                 envy_graph[student_id].append(other_student_id)
 
     return envy_graph
-
-
 
 def C(envy_graph, source, students):
     reachable_nodes = set()

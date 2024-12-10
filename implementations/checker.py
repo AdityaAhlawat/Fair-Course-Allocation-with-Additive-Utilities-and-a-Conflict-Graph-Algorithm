@@ -36,7 +36,7 @@ def is_ef1(allocation, students):
                     other_utility = sum(student.valuation_function.get(course.course_id, 0) for course in other_allocation_without_max)
                     if other_utility > own_utility:
                         ef1_false_count += 1
-                        print(f"Student {student.student_id} envies Student {other_student.student_id} under EF1 condition after removing course {max_utility_item.course_id}. Student {student.student_id} values their own bundle at {own_utility} and the envied bundle (after removing the highest-valued item) at {other_utility}")
+                        #print(f"Student {student.student_id} envies Student {other_student.student_id} under EF1 condition after removing course {max_utility_item.course_id}. Student {student.student_id} values their own bundle at {own_utility} and the envied bundle (after removing the highest-valued item) at {other_utility}")
     if ef1_false_count == 0:
         return True, ef1_false_count
     else:
@@ -59,7 +59,7 @@ def is_efx(allocation, students):
                     other_utility = sum(student.valuation_function.get(course.course_id, 0) for course in other_allocation_without_min)
                     if other_utility > own_utility:
                         efx_false_count += 1
-                        print(f"Student {student.student_id} envies Student {other_student.student_id} under EFX condition after removing course {min_utility_item.course_id}. Student {student.student_id} values their own bundle at {own_utility} and the envied bundle (after removing the least-valued item) at {other_utility}")
+                        #print(f"Student {student.student_id} envies Student {other_student.student_id} under EFX condition after removing course {min_utility_item.course_id}. Student {student.student_id} values their own bundle at {own_utility} and the envied bundle (after removing the least-valued item) at {other_utility}")
     if efx_false_count == 0:
         return True, efx_false_count
     else:
