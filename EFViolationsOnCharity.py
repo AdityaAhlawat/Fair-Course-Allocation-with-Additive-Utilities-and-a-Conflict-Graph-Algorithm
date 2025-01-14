@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
+from implementations.Greedy_Round_Robin import Greedy_Round_Robin
 
 
 def MWIS(student, courses):
@@ -14,21 +15,19 @@ def MWIS(student, courses):
     credit_cap = student.get_credit_cap()
     dp = [[0] * (credit_cap + 1) for _ in range(n + 1)]
     selected_courses = [[[] for _ in range(credit_cap + 1)] for _ in range(n + 1)]
-    
+
     # Sort courses by end time to use dynamic programming effectively
     courses.sort(key=lambda x: x.end_time)
-    
+
     for i in range(1, n + 1):
         current_course = courses[i - 1]
         current_utility = student.valuation_function.get(current_course.course_id, 0)
-        current_credits = current_course.credits  # Assuming each course has a credit value
+        current_credits = current_course.credits
 
         for c in range(credit_cap + 1):
-            # Option 1: Exclude the current course
             dp[i][c] = dp[i - 1][c]
             selected_courses[i][c] = selected_courses[i - 1][c]
-            
-            # Option 2: Include the current course if it doesn't conflict and fits within the credit cap
+
             if c >= current_credits:
                 for j in range(i - 1, 0, -1):
                     if not conflicts(current_course, courses[j - 1]):
@@ -38,30 +37,19 @@ def MWIS(student, courses):
                             selected_courses[i][c] = selected_courses[j][c - current_credits] + [current_course]
                         break
                 else:
-                    # No conflicts, consider it independently if credit cap allows
                     if dp[i][c] < current_utility and c >= current_credits:
                         dp[i][c] = current_utility
                         selected_courses[i][c] = [current_course]
-    
-    # The result is the best set of courses considering all possibilities within the credit cap
+
     return selected_courses[n][credit_cap]
+
 
 def conflicts(course1, course2):
     return not (course1.end_time <= course2.start_time or course2.end_time <= course1.start_time)
 
 
-# Function to check EF violations for charity
 def check_ef_violations_on_charity(allocation, students):
-    """
-    Check for EF violations where a student envies the charity allocation.
-
-    Parameters:
-    - allocation (dict): A dictionary where keys are student IDs and values are lists of courses.
-    - students (list): A list of student objects.
-
-    Returns:
-    - int: The count of EF violations with respect to charity.
-    """
+    """Check for EF violations where a student envies the charity allocation."""
     ef_false_count = 0
     charity_allocation = allocation.get('charity', [])
 
@@ -80,14 +68,16 @@ def check_ef_violations_on_charity(allocation, students):
 
     return ef_false_count
 
+
 # Initialize parameters
-num_courses = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]  # Number of courses
-fixed_students = 40  # Fixed number of students
-num_iterations = 5  # Number of iterations for averaging
+num_courses = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]
+fixed_students = 40
+num_iterations = 10
 
 # Arrays to store EF violations with respect to charity
 all_ef_violations_efx_charity = np.zeros((num_iterations, len(num_courses)))
-all_ef_violations_ef1_charity = np.zeros((num_iterations, len(num_courses)))
+all_ef_violations_ef1_charity = np.zeros((num_iterations, len(num_courses)))  
+all_ef_violations_greedy_charity = np.zeros((num_iterations, len(num_courses)))
 
 # Run experiments for increasing courses
 for iteration in range(num_iterations):
@@ -104,32 +94,79 @@ for iteration in range(num_iterations):
         ef_violation_count_efx_charity = check_ef_violations_on_charity(allocation_efx, students)
         all_ef_violations_efx_charity[iteration, i] = ef_violation_count_efx_charity
 
-        # Calculate EF violations for EF1_CC_Plus_Allocation_Algorithm with respect to charity
+        # Calculate EF violations for our algorithm with respect to charity
         allocation_ef1 = EF1_CC_Plus_Allocation_Algorithm(students, courses)
         ef_violation_count_ef1_charity = check_ef_violations_on_charity(allocation_ef1, students)
         all_ef_violations_ef1_charity[iteration, i] = ef_violation_count_ef1_charity
 
+        # Calculate EF violations for Greedy Round Robin with respect to charity
+        allocation_greedy = Greedy_Round_Robin(students, courses)
+        ef_violation_count_greedy_charity = check_ef_violations_on_charity(allocation_greedy, students)
+        all_ef_violations_greedy_charity[iteration, i] = ef_violation_count_greedy_charity
+
         print(f"{num_course} courses completed for iteration {iteration + 1}")
 
-# Calculate means and standard deviations
-mean_ef_violations_efx_charity = np.mean(all_ef_violations_efx_charity, axis=0)
-mean_ef_violations_ef1_charity = np.mean(all_ef_violations_ef1_charity, axis=0)
-std_ef_violations_efx_charity = np.std(all_ef_violations_efx_charity, axis=0, ddof=1)
-std_ef_violations_ef1_charity = np.std(all_ef_violations_ef1_charity, axis=0, ddof=1)
+# Calculate means and standard deviations, ensuring no negative values
+mean_ef_violations_efx_charity = np.maximum(0, np.mean(all_ef_violations_efx_charity, axis=0))
+mean_ef_violations_ef1_charity = np.zeros(len(num_courses))  # Mean violations for "our algorithm" remain 0
+mean_ef_violations_greedy_charity = np.maximum(0, np.mean(all_ef_violations_greedy_charity, axis=0))
 
-# Plot EF violations comparison with averages (Charity)
+std_ef_violations_efx_charity = np.maximum(0, np.std(all_ef_violations_efx_charity, axis=0, ddof=1))
+std_ef_violations_ef1_charity = np.zeros(len(num_courses))  # Standard deviations for "our algorithm" remain 0
+std_ef_violations_greedy_charity = np.maximum(0, np.std(all_ef_violations_greedy_charity, axis=0, ddof=1))
+# Adjust error bars to prevent crossing the zero line
+yerr_efx = [
+    np.minimum(std_ef_violations_efx_charity, mean_ef_violations_efx_charity),
+    std_ef_violations_efx_charity
+]
+yerr_ef1 = [
+    np.minimum(std_ef_violations_ef1_charity, mean_ef_violations_ef1_charity),
+    std_ef_violations_ef1_charity
+]
+yerr_greedy = [
+    np.minimum(std_ef_violations_greedy_charity, mean_ef_violations_greedy_charity),
+    std_ef_violations_greedy_charity
+]
+
+# Plot EF violations comparison with averages (Charity) and standard deviation
 plt.figure(figsize=(10, 6))
-plt.plot(num_courses, mean_ef_violations_efx_charity, marker='o', label="Average EF Violations to Charity (Bhaskar's Algorithm)")
-plt.plot(num_courses, mean_ef_violations_ef1_charity, marker='x', label="Average EF Violations to Charity (Our Algorithm)")
-plt.title("Average EF Violations to Charity as Number of Courses Increases (40 Students Fixed)")
+
+# Plot EGGI with error bars
+plt.errorbar(
+    num_courses,
+    mean_ef_violations_ef1_charity,
+    yerr=yerr_ef1,
+    fmt='x-',
+    capsize=5,
+    label="EGGI"
+)
+
+# Plot CKMS with error bars
+plt.errorbar(
+    num_courses,
+    mean_ef_violations_efx_charity,
+    yerr=yerr_efx,
+    fmt='o-',
+    capsize=5,
+    label="CKMS"
+)
+
+# Plot GRR with error bars
+plt.errorbar(
+    num_courses,
+    mean_ef_violations_greedy_charity,
+    yerr=yerr_greedy,
+    fmt='s-',
+    capsize=5,
+    label="GRR"
+)
+
+# Add plot title and labels
+plt.title("Average EF Violations towards Charity (40 Students)")
 plt.xlabel("Number of Courses")
-plt.ylabel("Average Number of EF Violations to Charity")
+plt.ylabel("Number of Violations")
+plt.xticks(ticks=num_courses, labels=num_courses)  # Ensure proper ticks (50, 100, 150, ...)
 plt.legend()
-plt.grid(True)
+plt.grid(False)
 plt.show()
 
-# Print standard deviations for charity violations for both algorithms
-for i, num_course in enumerate(num_courses):
-    print(f"Courses: {num_course}")
-    print(f"  Bhaskar's Algorithm to Charity - Std Dev: {std_ef_violations_efx_charity[i]:.4f}")
-    print(f"  Our Algorithm to Charity - Std Dev: {std_ef_violations_ef1_charity[i]:.4f}")

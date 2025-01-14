@@ -3,16 +3,18 @@ import matplotlib.pyplot as plt
 from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
+from implementations.Greedy_Round_Robin import Greedy_Round_Robin
 from implementations.checker import is_ef
 
 # Initialize parameters
 num_courses = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]  # Number of courses
 fixed_students = 40  # Fixed number of students
-num_iterations = 5  # Number of iterations for averaging
+num_iterations = 10  # Number of iterations for averaging
 
 # Arrays to store EF violations
 all_ef_violations_efx = np.zeros((num_iterations, len(num_courses)))
 all_ef_violations_ef1 = np.zeros((num_iterations, len(num_courses)))
+all_ef_violations_greedy = np.zeros((num_iterations, len(num_courses)))
 
 # Run experiments for increasing courses
 for iteration in range(num_iterations):
@@ -34,27 +36,63 @@ for iteration in range(num_iterations):
         _, ef_violation_count_ef1 = is_ef(allocation_ef1, students)
         all_ef_violations_ef1[iteration, i] = ef_violation_count_ef1
 
+        # Calculate EF violations for Greedy Round Robin
+        allocation_greedy = Greedy_Round_Robin(students, courses)
+        _, ef_violation_count_greedy = is_ef(allocation_greedy, students)
+        all_ef_violations_greedy[iteration, i] = ef_violation_count_greedy
+
         print(f"{num_course} courses completed for iteration {iteration + 1}")
 
-# Calculate means and standard deviations
-mean_ef_violations_efx = np.mean(all_ef_violations_efx, axis=0)
-mean_ef_violations_ef1 = np.mean(all_ef_violations_ef1, axis=0)
-std_ef_violations_efx = np.std(all_ef_violations_efx, axis=0, ddof=1)
-std_ef_violations_ef1 = np.std(all_ef_violations_ef1, axis=0, ddof=1)
+# Calculate means and standard deviations, ensuring no negative values
+mean_ef_violations_efx = np.maximum(0, np.mean(all_ef_violations_efx, axis=0))
+mean_ef_violations_ef1 = np.maximum(0, np.mean(all_ef_violations_ef1, axis=0))
+mean_ef_violations_greedy = np.maximum(0, np.mean(all_ef_violations_greedy, axis=0))
 
-# Plot EF violations comparison with averages
+std_ef_violations_efx = np.maximum(0, np.std(all_ef_violations_efx, axis=0, ddof=1))
+std_ef_violations_ef1 = np.maximum(0, np.std(all_ef_violations_ef1, axis=0, ddof=1))
+std_ef_violations_greedy = np.maximum(0, np.std(all_ef_violations_greedy, axis=0, ddof=1))
+
+# Plot EF violations comparison with averages and standard deviations
 plt.figure(figsize=(10, 6))
-plt.plot(num_courses, mean_ef_violations_efx, marker='o', label="Average EF Violations (Bhaskar's Algorithm)")
-plt.plot(num_courses, mean_ef_violations_ef1, marker='x', label="Average EF Violations (Our Algorithm)")
-plt.title("Average EF Violations as Number of Courses Increases (40 Students Fixed)")
+
+# Plot EGGI with error bars
+plt.errorbar(
+    num_courses,
+    mean_ef_violations_ef1,
+    yerr=std_ef_violations_ef1,
+    fmt='x-',
+    capsize=5,
+    label="EGGI"
+)
+
+# Plot CKMS with error bars
+plt.errorbar(
+    num_courses,
+    mean_ef_violations_efx,
+    yerr=std_ef_violations_efx,
+    fmt='o-',
+    capsize=5,
+    label="CKMS"
+)
+
+# Plot GRR with error bars
+plt.errorbar(
+    num_courses,
+    mean_ef_violations_greedy,
+    yerr=std_ef_violations_greedy,
+    fmt='s-',
+    capsize=5,
+    label="GRR"
+)
+
+# Add plot title and labels
+plt.title("Average EF Violations among Students (40 Students)")
 plt.xlabel("Number of Courses")
-plt.ylabel("Average Number of EF Violations")
+plt.ylabel("Number of Violations")
+
+# Set x-axis ticks and labels to either 50, 100, 150, ... or 50, 150, 250, ...
+plt.xticks(ticks=num_courses, labels=num_courses)
 plt.legend()
-plt.grid(True)
+plt.grid(False)
 plt.show()
 
-# Print standard deviations for both algorithms
-for i, num_course in enumerate(num_courses):
-    print(f"Courses: {num_course}")
-    print(f"  Bhaskar's Algorithm - Std Dev: {std_ef_violations_efx[i]:.4f}")
-    print(f"  Our Algorithm - Std Dev: {std_ef_violations_ef1[i]:.4f}")

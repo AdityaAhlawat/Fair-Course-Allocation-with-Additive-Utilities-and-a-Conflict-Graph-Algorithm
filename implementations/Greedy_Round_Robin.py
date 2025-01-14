@@ -1,7 +1,7 @@
 from classes.student import Student
 from collections import deque, defaultdict
 
-def EF1_CC_Plus_Allocation_Algorithm(students, courses):
+def Greedy_Round_Robin(students, courses):
     # Create a virtual charity student
     charity = Student(student_id='charity', credit_cap=float('inf'), valuation_function={})
 
@@ -28,41 +28,6 @@ def EF1_CC_Plus_Allocation_Algorithm(students, courses):
                     D = list(set(D).union(set(allocation[student.student_id])) - set(A_prime))  # Update charity
                     G = update_envy_graph(G, students, allocation, student)  # Update envy graph
                     break  # Move to the next course after allocation
-    # Phase 2: Reallocation to ensure EF1-CC+
-    D = list(set(courses) - set([course for alloc in allocation.values() for course in alloc]))  # Unallocated courses
-    D.sort(key=lambda course: course.end_time)  # Sort charity by non-decreasing order of end time
-    levels = level_ordered_topological_sort(G)  # Perform level-ordered topological sort to get levels
-    
-    # Start the reallocation process
-    t = 1
-    while t <= len(D):
-        l = 0  # Start with the first level, which is indexed at 0 in Python
-        reallocated = False  # Track if any reallocation occurs
-        while l < len(levels):  # Iterate through levels starting from 0
-            level_students = levels[l]  # Access levels correctly
-            for student_id in level_students:
-                student = next(s for s in students if s.student_id == student_id)
-                
-                # Compute MWIS for the student with respect to the current bundle D[t]
-                mwis_bundle = MWIS(student, D[:t])
-                if sum(student.valuation_function.get(course.course_id, 0) for course in mwis_bundle) > student.utility(allocation):
-                    A_prime = mwis_bundle
-                    D = list(set(D).union(set(allocation[student.student_id])) - set(A_prime))  # Update the charity
-                    allocation[student.student_id] = A_prime  # Update the allocation of student i
-                    G = update_envy_graph(G, students, allocation, student)  # Update the envy graph
-                    levels = level_ordered_topological_sort(G)  # Recompute levels after updating the graph
-
-                    t = 1  # Reset the bundle size to 1
-                    l = 0  # Reset the level to 0 (first level in Python)
-                    reallocated = True  # Mark that reallocation occurred
-                    break  # Break out of the student loop
-            if reallocated:
-                break  # Break out of the level loop if reallocation occurred
-            l += 1  # Move to the next level
-        if not reallocated:
-            t += 1  # Increase bundle size only if no reallocation occurred
-        #print("value of t: " + str(t), "value of len(D): " + str(len(D)))
-
     # Phase 3: Allocate remaining courses to charity
     students.append(charity)
     charity_allocation = [course for course in courses if course not in [c for alloc in allocation.values() for c in alloc]]
@@ -72,11 +37,12 @@ def EF1_CC_Plus_Allocation_Algorithm(students, courses):
 
 # Define the MWIS function
 def MWIS(student, courses):
+    if str(student.student_id) == "charity":
+        return courses
     """Find the Maximum Weighted Independent Set of courses considering the student's credit cap."""
     n = len(courses)
     if n == 0:
         return []
-
     credit_cap = student.get_credit_cap()
     dp = [[0] * (int(credit_cap) + 1) for _ in range(n + 1)]
     selected_courses = [[[] for _ in range(credit_cap + 1)] for _ in range(n + 1)]

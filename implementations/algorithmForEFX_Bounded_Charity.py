@@ -13,8 +13,8 @@ def EFX_Allocation_With_Bounded_Charity(students, courses):
             allocation, pool, affected_student = apply_u0(allocation, pool, students)
         elif is_u1_applicable(students, allocation, pool):
             allocation, pool, affected_student = apply_u1(students, allocation, pool)
-        elif is_u2_applicable(students, allocation, pool, envy_graph):
-            allocation, pool, affected_student = apply_u2(students, allocation, pool, envy_graph)
+        #elif is_u2_applicable(students, allocation, pool, envy_graph):
+            #allocation, pool, affected_student = apply_u2(students, allocation, pool, envy_graph)
         # Update the envy graph after applying the rule with the affected student
         if affected_student != None:
             envy_graph = update_envy_graph(envy_graph, students, allocation, affected_student)
@@ -29,7 +29,7 @@ def EFX_Allocation_With_Bounded_Charity(students, courses):
 
 def is_any_rule_applicable(students, allocation, pool, envy_graph):
     # Check if any of the update rules (U0, U1, U2) are applicable
-    return is_u0_applicable(students, allocation, pool, envy_graph) or is_u1_applicable(students, allocation, pool) or is_u2_applicable(students, allocation, pool, envy_graph)
+    return is_u0_applicable(students, allocation, pool, envy_graph) or is_u1_applicable(students, allocation, pool) #or is_u2_applicable(students, allocation, pool, envy_graph)
 
 def is_u0_applicable(students, allocation, pool, envy_graph):
     # Check if U0 is applicable
@@ -378,6 +378,9 @@ def update_envy_graph(G, students, allocation, affected_student):
 def can_allocate_good(student, course, allocation, students):
     # Temporarily allocate the course to the student
     student_bundle = allocation[student.get_id()].copy()
+    for owned_course in student_bundle:
+        if conflicts(owned_course, course):
+            return False
     student_bundle.append(course)
     for other_student in students:
         if other_student != student:
@@ -396,7 +399,7 @@ def student_valuation(student, courses):
         return 0  # Return 0 if there are no courses
     
     credit_cap = student.get_credit_cap()
-    dp = [[0] * (credit_cap + 1) for _ in range(n + 1)]  # DP table to store utility values
+    dp = [[0] * (int(credit_cap) + 1) for _ in range(n + 1)]
     
     # Sort courses by end time to use dynamic programming effectively
     courses.sort(key=lambda x: x.end_time)
