@@ -53,7 +53,6 @@ std_runtimes_efx_courses = np.std(all_runtimes_efx_courses, axis=0, ddof=1)
 std_runtimes_ef1_courses = np.std(all_runtimes_ef1_courses, axis=0, ddof=1)
 std_runtimes_greedy_courses = np.std(all_runtimes_greedy_courses, axis=0, ddof=1)
 
-
 # Plot runtime comparison with error bars
 plt.figure(figsize=(10, 6))
 
@@ -77,23 +76,26 @@ plt.errorbar(
     label="CKMS"
 )
 
-# Plot GRR (Greedy Round Robin) with error bars
+# Plot EGE (Greedy Round Robin) with error bars
 plt.errorbar(
     num_courses, 
     mean_runtimes_greedy_courses, 
     yerr=std_runtimes_greedy_courses, 
     fmt='s-', 
     capsize=5, 
-    label="GRR"
+    label="EGE"
 )
 
-# Add plot title and labels
-plt.title("Average Runtime Comparison (40 Students)")
-plt.xlabel("Number of Courses")
-plt.ylabel("Runtime (seconds)")
-plt.xticks(ticks=num_courses, labels=num_courses)  # Set x-axis ticks and labels explicitly
-plt.legend()
+# Add plot title and labels with larger font sizes
+plt.title("Average Runtime Comparison (40 Students)", fontsize=20)  # Increased title size
+plt.xlabel("Number of Courses", fontsize=18)  # Increased x-axis label size
+plt.ylabel("Runtime (seconds)", fontsize=18)  # Increased y-axis label size
+
+# Set x-axis ticks and labels with adjusted font size
+plt.xticks(ticks=num_courses, labels=num_courses, fontsize=12)  # Adjust tick size
+plt.yticks(fontsize=12)  # Adjust y-tick size
+
+# Update legend font size
+plt.legend(fontsize=17)  # Increased legend size
 plt.grid(False)
 plt.show()
-
-num_courses = list(num_courses)

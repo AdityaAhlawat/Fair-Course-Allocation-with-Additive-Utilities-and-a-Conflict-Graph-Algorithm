@@ -4,12 +4,75 @@ from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
 from implementations.Greedy_Round_Robin import Greedy_Round_Robin
-from implementations.checker import is_ef
 
 # Initialize parameters
 num_courses = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]  # Number of courses
 fixed_students = 40  # Fixed number of students
 num_iterations = 10  # Number of iterations for averaging
+
+
+def MWIS(student, courses):
+    """Find the Maximum Weighted Independent Set of courses considering the student's credit cap."""
+    n = len(courses)
+    if n == 0:
+        return []
+
+    credit_cap = student.get_credit_cap()
+    dp = [[0] * (credit_cap + 1) for _ in range(n + 1)]
+    selected_courses = [[[] for _ in range(credit_cap + 1)] for _ in range(n + 1)]
+
+    # Sort courses by end time to use dynamic programming effectively
+    courses.sort(key=lambda x: x.end_time)
+
+    for i in range(1, n + 1):
+        current_course = courses[i - 1]
+        current_utility = student.valuation_function.get(current_course.course_id, 0)
+        current_credits = current_course.credits
+
+        for c in range(credit_cap + 1):
+            dp[i][c] = dp[i - 1][c]
+            selected_courses[i][c] = selected_courses[i - 1][c]
+
+            if c >= current_credits:
+                for j in range(i - 1, 0, -1):
+                    if not conflicts(current_course, courses[j - 1]):
+                        potential_utility = dp[j][c - current_credits] + current_utility
+                        if potential_utility > dp[i][c]:
+                            dp[i][c] = potential_utility
+                            selected_courses[i][c] = selected_courses[j][c - current_credits] + [current_course]
+                        break
+                else:
+                    if dp[i][c] < current_utility and c >= current_credits:
+                        dp[i][c] = current_utility
+                        selected_courses[i][c] = [current_course]
+
+    return selected_courses[n][credit_cap]
+
+
+def conflicts(course1, course2):
+    return not (course1.end_time <= course2.start_time or course2.end_time <= course1.start_time)
+
+def is_ef(allocation, students):
+    ef_false_count = 0
+    for student in students:
+        if student.student_id == 'charity':
+            continue
+        own_courses_MWIS = MWIS(student, allocation[student.student_id])
+        own_utility = sum(student.get_valuation_function().get(course.course_id, 0) for course in own_courses_MWIS)
+        for other_student in students:
+            if student != other_student and other_student.student_id != 'charity':
+                # Use MWIS to determine if the student would envy the other's allocation
+                other_allocation = allocation[other_student.student_id]
+                mwis_allocation = MWIS(student, other_allocation)
+                other_utility = sum(student.valuation_function.get(course.course_id, 0) for course in mwis_allocation)
+                if other_utility > own_utility:
+                    ef_false_count += 1
+                    #print(f"Student {student.student_id} envies Student {other_student.student_id} under EF condition. Student {student.student_id} values their own bundle at {own_utility} and the envied bundle at {other_utility}")
+    if ef_false_count == 0:
+        return True, ef_false_count
+    else:
+        return False, ef_false_count
+    
 
 # Arrays to store EF violations
 all_ef_violations_efx = np.zeros((num_iterations, len(num_courses)))
@@ -75,24 +138,26 @@ plt.errorbar(
     label="CKMS"
 )
 
-# Plot GRR with error bars
+# Plot EGE with error bars (changed from GRR to EGE)
 plt.errorbar(
     num_courses,
     mean_ef_violations_greedy,
     yerr=std_ef_violations_greedy,
     fmt='s-',
     capsize=5,
-    label="GRR"
+    label="EGE"
 )
 
-# Add plot title and labels
-plt.title("Average EF Violations among Students (40 Students)")
-plt.xlabel("Number of Courses")
-plt.ylabel("Number of Violations")
+# Add plot title and labels with larger font sizes
+plt.title("Average EF Violations among Students (40 Students)", fontsize=20)  # Increased title size
+plt.xlabel("Number of Courses", fontsize=18)  # Increased x-axis label size
+plt.ylabel("Number of Violations", fontsize=18)  # Increased y-axis label size
 
-# Set x-axis ticks and labels to either 50, 100, 150, ... or 50, 150, 250, ...
-plt.xticks(ticks=num_courses, labels=num_courses)
-plt.legend()
+# Set x-axis ticks and labels with adjusted font size
+plt.xticks(ticks=num_courses, labels=num_courses, fontsize=12)  # Adjust tick size
+plt.yticks(fontsize=12)  # Adjust y-tick size
+
+# Update legend font size
+plt.legend(fontsize=17)  # Increased legend size
 plt.grid(False)
 plt.show()
-

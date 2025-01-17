@@ -9,7 +9,7 @@ from implementations.Greedy_Round_Robin import Greedy_Round_Robin
 # Initialize parameters
 num_students = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 fixed_courses = 200
-num_iterations = 10
+num_iterations = 5
 
 # Arrays to store runtimes
 all_runtimes_efx = np.zeros((num_iterations, len(num_students)))
@@ -76,24 +76,26 @@ plt.errorbar(
     label="CKMS"
 )
 
-# Plot GRR (Greedy Round Robin) with error bars
+# Plot EGE (Greedy Round Robin) with error bars
 plt.errorbar(
     num_students, 
     mean_runtimes_greedy, 
     yerr=std_runtimes_greedy, 
     fmt='s-', 
     capsize=5, 
-    label="GRR"
+    label="EGE"
 )
 
-# Add plot title and labels
-plt.title("Average Runtime Comparison (200 Courses)")
-plt.xlabel("Number of Students")
-plt.ylabel("Runtime (seconds)")
+# Add plot title and labels with larger font sizes
+plt.title("Average Runtime Comparison (200 Courses)", fontsize=20)  # Increased title size
+plt.xlabel("Number of Students", fontsize=18)  # Increased x-axis label size
+plt.ylabel("Runtime (seconds)", fontsize=18)  # Increased y-axis label size
 
-# Set x-axis ticks and labels
-plt.xticks(ticks=num_students, labels=num_students)  # Choose 5, 10, 15, ... or 5, 15, 25, ... based on your preference
-plt.legend()
+# Set x-axis ticks and labels with adjusted font size
+plt.xticks(ticks=num_students, labels=num_students, fontsize=12)  # Adjust tick size
+plt.yticks(fontsize=12)  # Adjust y-tick size
+
+# Update legend font size
+plt.legend(fontsize=17)  # Increased legend size
 plt.grid(False)
 plt.show()
-

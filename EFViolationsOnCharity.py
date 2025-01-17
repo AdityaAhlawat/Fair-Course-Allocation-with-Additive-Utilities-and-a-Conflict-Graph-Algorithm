@@ -151,22 +151,22 @@ plt.errorbar(
     label="CKMS"
 )
 
-# Plot GRR with error bars
+# Plot EGE with error bars
 plt.errorbar(
     num_courses,
     mean_ef_violations_greedy_charity,
     yerr=yerr_greedy,
     fmt='s-',
     capsize=5,
-    label="GRR"
+    label="EGE"
 )
 
 # Add plot title and labels
-plt.title("Average EF Violations towards Charity (40 Students)")
-plt.xlabel("Number of Courses")
-plt.ylabel("Number of Violations")
-plt.xticks(ticks=num_courses, labels=num_courses)  # Ensure proper ticks (50, 100, 150, ...)
-plt.legend()
+plt.title("Average EF Violations towards Charity (40 Students)", fontsize=20)  # Increased title size
+plt.xlabel("Number of Courses", fontsize=18)  # Increased x-axis label size
+plt.ylabel("Number of Violations", fontsize=18)  # Increased y-axis label size
+plt.xticks(ticks=num_courses, labels=num_courses, fontsize=12)  # Adjust tick size
+plt.yticks(fontsize=12)  # Adjust y-tick size
+plt.legend(fontsize=17)  # Increased legend size
 plt.grid(False)
 plt.show()
-
