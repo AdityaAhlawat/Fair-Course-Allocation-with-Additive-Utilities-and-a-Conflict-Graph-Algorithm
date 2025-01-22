@@ -32,14 +32,19 @@ custom_data = Data(0, 0, total_school_time)
     #for i in range(0, seat_capacity):
         #custom_data.add_course(course_id=f"c{course_id}", credits=1, seat_capacity=1, start_time=start_time, end_time=end_time)
 
-
 # Add courses with specific start and end times
-custom_data.add_course(course_id="c1", credits=1, seat_capacity=5, start_time=5, end_time=8)
-custom_data.add_course(course_id="c2", credits=1, seat_capacity=6, start_time=7, end_time=9)
-custom_data.add_course(course_id="c3", credits=1, seat_capacity=2, start_time=6, end_time=9)
-custom_data.add_course(course_id="c4", credits=1, seat_capacity=3, start_time=0, end_time=3)
-custom_data.add_course(course_id="c5", credits=1, seat_capacity=5, start_time=7, end_time=10)
-custom_data.add_course(course_id="c6", credits=1, seat_capacity=2, start_time=4, end_time=6)
+for i in range(0, 5):
+    custom_data.add_course(course_id="c1", credits=1, seat_capacity=1, start_time=5, end_time=8)
+for i in range(0, 6):
+    custom_data.add_course(course_id="c2", credits=1, seat_capacity=1, start_time=7, end_time=9)
+for i in range(0, 2):
+    custom_data.add_course(course_id="c3", credits=1, seat_capacity=1, start_time=6, end_time=9)
+for i in range(0, 3):
+    custom_data.add_course(course_id="c4", credits=1, seat_capacity=1, start_time=0, end_time=3)
+for i in range(0, 5):
+    custom_data.add_course(course_id="c5", credits=1, seat_capacity=1, start_time=7, end_time=10)
+for i in range(0, 2):
+    custom_data.add_course(course_id="c6", credits=1, seat_capacity=1, start_time=4, end_time=6)
 
 # Manually add students based on the given data
 custom_data.add_student(
@@ -75,10 +80,6 @@ start = time.time()
 allocation2 = EF1_CC_Plus_Allocation_Algorithm(students, courses)
 end = time.time()
 print("Total Time Taken for EGGI " + str(end - start) + " seconds")
-start = time.time()
-allocation3 = Greedy_Round_Robin(students, courses)
-end = time.time()
-print("Total Time Taken for EGE " + str(end - start) + " seconds")
 
 print("CKMS ALGORITHM -----------------")
 #Lets find the social welfare of our allocation:
@@ -149,38 +150,3 @@ for student in students:
     
     print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
 
-
-print("EGE ALGORITHM -----------------")
-
-if allocation3['charity']:
-    # Only compute max if there are students and courses in the 'charity' allocation
-    maxValueOfCharity = max(
-        student.get_valuation_function().get(course.course_id, 0) 
-        for course in allocation3['charity'] 
-        for student in students
-    )
-else:
-    maxValueOfCharity = 0 
-
-
-# Check for EF, EF1, and EFX
-print("Is EF:", is_ef(allocation3, students))
-print("Is EF1:", is_ef1(allocation3, students)) 
-print("Is EFX:", is_efx(allocation3, students))
-print("Maximum Value of Charity from any Student Valuation Function:", maxValueOfCharity)
-
-#What is Envy Ratio?
-
-# Print the assignments and utility for each student
-for student in students:
-    assigned_courses = allocation3[student.student_id]
-    utility = student.utility(allocation2)
-    course_details = [
-        f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
-        for course in assigned_courses
-    ]
-    valuation_function_details = {
-        course_id: value for course_id, value in student.valuation_function.items()
-    }
-    
-    print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
