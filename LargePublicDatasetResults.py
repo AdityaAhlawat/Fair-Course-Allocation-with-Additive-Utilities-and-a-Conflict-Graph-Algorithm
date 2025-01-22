@@ -252,8 +252,9 @@ for course_id, timing in timeOfCourses['course_timings'].items():
     end_time = timing['end_time']
     duration = timing['duration']
     capacity = timing['capacity']
-    custom_data.add_course(course_id=course_id, credits=1, seat_capacity=capacity, start_time=start_time, end_time=end_time)     
-
+    for i in range(0, capacity):
+        custom_data.add_course(course_id=course_id, credits=1, seat_capacity=1, start_time=start_time, end_time=end_time)
+   
 # Add students using the provided data
 for student_id, valuations in data['valuations'].items():
     custom_data.add_student(
@@ -269,17 +270,17 @@ courses = custom_data.get_courses()
 allocation_top_choice, seat_violations = Top_Choice_Allocation(students, courses)
 
 # Print the results
-print("Top Choice Allocation Results:")
-for student in students:
-    assigned_courses = allocation_top_choice[student.student_id]
-    utility = student.utility(allocation_top_choice)
-    course_details = [
-        f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
-        for course in assigned_courses
-    ]
-    print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
+#print("Top Choice Allocation Results:")
+#for student in students:
+    #assigned_courses = allocation_top_choice[student.student_id]
+    #utility = student.utility(allocation_top_choice)
+    #course_details = [
+        #f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
+        #for course in assigned_courses
+    #]
+    #print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
 
-print(f"Total number of seat violations: {seat_violations}")
+#print(f"Total number of seat violations: {seat_violations}")
 
 start = time.time()
 allocation3 = Greedy_Round_Robin(students, courses)
