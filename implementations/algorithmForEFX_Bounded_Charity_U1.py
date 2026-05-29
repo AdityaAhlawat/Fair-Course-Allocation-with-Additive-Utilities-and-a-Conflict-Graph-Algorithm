@@ -1,7 +1,7 @@
 from collections import deque
 from itertools import chain, combinations
 
-def EFX_Allocation_With_Bounded_Charity(students, courses):
+def EFX_Allocation_With_Bounded_Charity_U1(students, courses):
     # Initialize empty allocation and pool of unallocated goods
     allocation = {student.get_id(): [] for student in students}
     pool = courses[:]  # All courses initially in the pool
