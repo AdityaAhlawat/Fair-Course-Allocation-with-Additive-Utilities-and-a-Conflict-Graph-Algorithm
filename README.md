@@ -9,7 +9,9 @@ This is the README file to reproduce the results in the submitted manuscript: Fa
 1. `algorithmForEF1_CC_Plus.py`: Our algorithm (EGGI)
 2. `algorithmForEFX_Bounded_Charity.py`: Implementation of the algorithm in Chaudhury et al. 2021 (CKMS)
 3. `envy_graph_elimination`: Implementation of a modified version of the algorithm in Lipton et al. 2004 (EGE)
-4. `optimized.py`: Gurobi implementation of the optimal algorithm that maximizes the social welfare subject to the capacity, conflict, and fairness constraints in the course allocation problem. 
+4. `algorithmForEFX_Bounded_Charity_U1.py`: Implementation of the U1 update rule in Chaudhury et al. 2021 (U1)
+5. `optimized.py`: Gurobi implementation of the optimal algorithm that maximizes the social welfare subject to the capacity, conflict, and fairness constraints in the course allocation problem.
+6. `optimized0.py`: Gurobi implementation of the optimal algorithm that finds a feasible solution satisfying the capacity, conflict, and fairness constraints in the course allocation problem. 
 
 
 ## For generating the results on synthetic datasets, the main files are (the graphs will appear after a few minutes. You can view progress of the graph generation from the terminal.)
