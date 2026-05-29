@@ -1,3 +1,4 @@
+# Maximize social welfare subject to EF1-CC+ and capacity constraints, only for "small public dataset".
 from gurobipy import *
 import time
 import csv
