@@ -90,7 +90,7 @@ end = time.time()
 print("Total Time Taken for U1: " + str(end - start) + " seconds")
 
 print("CKMS ALGORITHM -----------------")
-#Lets find the social welfare of our allocation:
+# Let's find the social welfare of our allocation:
 if allocation1['charity']:
     # Only compute max if there are students and courses in the 'charity' allocation
     maxValueOfCharity = max(
@@ -107,6 +107,7 @@ print("Is EFX:", is_efx(allocation1, students))
 print("Maximum Value of Charity from any Student Valuation Function:", maxValueOfCharity)
 
 # Print the assignments and utility for each student
+total_utility = 0
 for student in students:
     assigned_courses = allocation1[student.student_id]
     utility = student.utility(allocation1)
@@ -117,13 +118,14 @@ for student in students:
     valuation_function_details = {
         course_id: value for course_id, value in student.valuation_function.items()
     }
-    
+    total_utility += utility
     print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
+print("Social Welfare Total for CKMS " + str(total_utility))
 
 
-print("EGGI ALGORITHM -----------------")
+print("\n EGGI ALGORITHM -----------------")
 
-#Lets find the social welfare of our allocation:
+# Let's find the social welfare of our allocation:
 
 if allocation2['charity']:
     # Only compute max if there are students and courses in the 'charity' allocation
@@ -142,9 +144,8 @@ print("Is EF1:", is_ef1(allocation2, students))
 print("Is EFX:", is_efx(allocation2, students))
 print("Maximum Value of Charity from any Student Valuation Function:", maxValueOfCharity)
 
-#What is Envy Ratio?
-
 # Print the assignments and utility for each student
+total_utility=0
 for student in students:
     assigned_courses = allocation2[student.student_id]
     utility = student.utility(allocation2)
@@ -155,12 +156,13 @@ for student in students:
     valuation_function_details = {
         course_id: value for course_id, value in student.valuation_function.items()
     }
-    
+    total_utility += utility
     print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
+print("Social Welfare Total for EGGI " + str(total_utility))
 
-print("EGE ALGORITHM -----------------")
+print("\n EGE ALGORITHM -----------------")
 
-#Lets find the social welfare of our allocation:
+# Let's find the social welfare of our allocation:
 if allocation3['charity']:
     # Only compute max if there are students and courses in the 'charity' allocation
     maxValueOfCharity = max(
@@ -178,9 +180,8 @@ print("Is EF1:", is_ef1(allocation3, students))
 print("Is EFX:", is_efx(allocation3, students))
 print("Maximum Value of Charity from any Student Valuation Function:", maxValueOfCharity)
 
-#What is Envy Ratio?
-
 # Print the assignments and utility for each student
+total_utility = 0
 for student in students:
     assigned_courses = allocation3[student.student_id]
     utility = student.utility(allocation2)
@@ -191,12 +192,13 @@ for student in students:
     valuation_function_details = {
         course_id: value for course_id, value in student.valuation_function.items()
     }
-    
+    total_utility += utility
     print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
+print("Social Welfare Total for EGE " + str(total_utility))
 
-print("U1 ALGORITHM -----------------")
+print("\n U1 ALGORITHM -----------------")
 
-#Lets find the social welfare of our allocation:
+# Let's find the social welfare of our allocation:
 if allocation4['charity']:
     # Only compute max if there are students and courses in the 'charity' allocation
     maxValueOfCharity = max(
@@ -214,9 +216,8 @@ print("Is EF1:", is_ef1(allocation4, students))
 print("Is EFX:", is_efx(allocation4, students))
 print("Maximum Value of Charity from any Student Valuation Function:", maxValueOfCharity)
 
-#What is Envy Ratio?
-
 # Print the assignments and utility for each student
+total_utility = 0
 for student in students:
     assigned_courses = allocation4[student.student_id]
     utility = student.utility(allocation4)
@@ -227,6 +228,6 @@ for student in students:
     valuation_function_details = {
         course_id: value for course_id, value in student.valuation_function.items()
     }
-    
+    total_utility += utility
     print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
-
+print("Social Welfare Total for U1 " + str(total_utility))
