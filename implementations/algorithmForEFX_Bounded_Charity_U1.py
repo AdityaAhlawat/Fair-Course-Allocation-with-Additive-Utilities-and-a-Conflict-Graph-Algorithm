@@ -9,20 +9,20 @@ def EFX_Allocation_With_Bounded_Charity(students, courses):
     # Main loop: Continue applying update rules while applicable
     while is_any_rule_applicable(students, allocation, pool, envy_graph):
         # Select an applicable rule (U0, U1, or U2)
-        if is_u0_applicable(students, allocation, pool, envy_graph):
-            allocation, pool, affected_student = apply_u0(allocation, pool, students)
-        elif is_u1_applicable(students, allocation, pool):
+        #if is_u0_applicable(students, allocation, pool, envy_graph):
+            #allocation, pool, affected_student = apply_u0(allocation, pool, students)
+        if is_u1_applicable(students, allocation, pool):
             allocation, pool, affected_student = apply_u1(students, allocation, pool)
-        elif is_u2_applicable(students, allocation, pool, envy_graph):
-            allocation, pool, affected_student = apply_u2(students, allocation, pool, envy_graph)
+        #elif is_u2_applicable(students, allocation, pool, envy_graph):
+            #allocation, pool, affected_student = apply_u2(students, allocation, pool, envy_graph)
         # Update the envy graph after applying the rule with the affected student
         if affected_student != None:
             envy_graph = update_envy_graph(envy_graph, students, allocation, affected_student)
 
     allocation['charity'] = pool  # Assign the remaining courses in the pool to 'charity'
     
-    for student in students:
-        allocation['charity'].extend(list(set(allocation[student.get_id()]) - set(MWIS(student, allocation[student.get_id()]))))
+    #for student in students:
+        #allocation['charity'].extend(list(set(allocation[student.get_id()]) - set(MWIS(student, allocation[student.get_id()]))))
 
     return allocation
 
@@ -400,7 +400,18 @@ def student_valuation(student, courses):
         return 0  # Return 0 if there are no courses
     
     credit_cap = student.get_credit_cap()
-    dp = [[0] * (int(credit_cap) + 1) for _ in range(n + 1)]
+    
+    # Handle infinity or very large credit caps
+    if credit_cap == float('inf') or credit_cap > 1000:  # Set a reasonable upper bound
+        credit_cap = 1000
+    
+    # Ensure credit_cap is a valid integer
+    try:
+        credit_cap = int(credit_cap)
+    except (OverflowError, ValueError):
+        credit_cap = 1000  # Default to a reasonable value
+    
+    dp = [[0] * (credit_cap + 1) for _ in range(n + 1)]
     
     # Sort courses by end time to use dynamic programming effectively
     courses.sort(key=lambda x: x.end_time)
@@ -530,6 +541,17 @@ def MWIS(student, courses):
         return courses
 
     credit_cap = student.get_credit_cap()
+    
+    # Handle infinity or very large credit caps
+    if credit_cap == float('inf') or credit_cap > 1000:  # Set a reasonable upper bound
+        credit_cap = 1000
+    
+    # Ensure credit_cap is a valid integer
+    try:
+        credit_cap = int(credit_cap)
+    except (OverflowError, ValueError):
+        credit_cap = 1000  # Default to a reasonable value
+    
     dp = [[0] * (credit_cap + 1) for _ in range(n + 1)]
     selected_courses = [[[] for _ in range(credit_cap + 1)] for _ in range(n + 1)]
     

@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
-from implementations.Greedy_Round_Robin import Greedy_Round_Robin
+from implementations.algorithmForEFX_Bounded_Charity_U1 import EFX_Allocation_With_Bounded_Charity as EFX_Allocation_With_Bounded_Charity_U1
+from implementations.envy_graph_elimination import Envy_Graph_Elimination
 from implementations.checker import is_ef, is_ef1, is_efx
 from collections import defaultdict
 
@@ -283,7 +284,7 @@ allocation_top_choice, seat_violations = Top_Choice_Allocation(students, courses
 #print(f"Total number of seat violations: {seat_violations}")
 
 start = time.time()
-allocation3 = Greedy_Round_Robin(students, courses)
+allocation3 = Envy_Graph_Elimination(students, courses)
 end = time.time()
 
 print("Total Time Taken for our EGE: " + str(end - start) + " seconds")
@@ -335,19 +336,18 @@ for student in students:
 print("Social Welfare Total for EGGI " + str(total_utility))
 
 start = time.time()
-allocation1 = EFX_Allocation_With_Bounded_Charity(students, courses)
+allocation4 = EFX_Allocation_With_Bounded_Charity_U1(students, courses)
 end = time.time()
-print("Total Time Taken for Bhaskar's Paper: " + str(end - start) + " seconds")
+print("Total Time Taken for U1: " + str(end - start) + " seconds")
 
 # Check for EF, EF1, and EFX
-print("Is EF:", is_ef(allocation1, students))
+print("Is EF:", is_ef(allocation4, students))
 
-#What is Envy Ratio?
-
+total_utility = 0
 # Print the assignments and utility for each student
 for student in students:
-    assigned_courses = allocation1[student.student_id]
-    utility = student.utility(allocation1)
+    assigned_courses = allocation4[student.student_id]
+    utility = student.utility(allocation4)
     course_details = [
         f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
         for course in assigned_courses
@@ -355,5 +355,32 @@ for student in students:
     valuation_function_details = {
         course_id: value for course_id, value in student.valuation_function.items()
     }
+    total_utility += utility
+
+    print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
+
+print("Social Welfare Total for U1 " + str(total_utility))
+
+#start = time.time()
+#allocation1 = EFX_Allocation_With_Bounded_Charity(students, courses)
+#end = time.time()
+#print("Total Time Taken for Bhaskar's Paper: " + str(end - start) + " seconds")
+
+# Check for EF, EF1, and EFX
+#print("Is EF:", is_ef(allocation1, students))
+
+#What is Envy Ratio?
+
+# Print the assignments and utility for each student
+#for student in students:
+    #assigned_courses = allocation1[student.student_id]
+    #utility = student.utility(allocation1)
+    #course_details = [
+        #f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
+        #for course in assigned_courses
+    #]
+    #valuation_function_details = {
+        #course_id: value for course_id, value in student.valuation_function.items()
+    #}
     
-    print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}") 
+    #print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}") 

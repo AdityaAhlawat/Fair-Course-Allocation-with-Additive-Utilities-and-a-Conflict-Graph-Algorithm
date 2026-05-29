@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
-from implementations.Greedy_Round_Robin import Greedy_Round_Robin
+from implementations.algorithmForEFX_Bounded_Charity_U1 import EFX_Allocation_With_Bounded_Charity as EFX_Allocation_With_Bounded_Charity_U1
+from implementations.envy_graph_elimination import Envy_Graph_Elimination
 
 # Initialize parameters
 num_courses = range(50, 210, 10)  # Courses from 50 to 160, increment by 10
@@ -14,7 +15,8 @@ num_iterations = 10
 # Arrays to store runtimes
 all_runtimes_efx_courses = np.zeros((num_iterations, len(num_courses)))
 all_runtimes_ef1_courses = np.zeros((num_iterations, len(num_courses)))
-all_runtimes_greedy_courses = np.zeros((num_iterations, len(num_courses)))
+all_runtimes_envy_graph_courses = np.zeros((num_iterations, len(num_courses)))
+all_runtimes_u1_courses = np.zeros((num_iterations, len(num_courses)))
 
 # Run experiments
 for iteration in range(num_iterations):
@@ -38,20 +40,29 @@ for iteration in range(num_iterations):
         ef1_runtime = time.time() - start_time
         all_runtimes_ef1_courses[iteration, i] = ef1_runtime
 
-        # Measure runtime for Greedy Round Robin
-        print(f"Running Greedy Round Robin for {courses_count} courses")
+        # Measure runtime for Envy Graph Elimination
+        print(f"Running Envy Graph Elimination for {courses_count} courses")
         start_time = time.time()
-        _ = Greedy_Round_Robin(students, courses)
-        greedy_runtime = time.time() - start_time
-        all_runtimes_greedy_courses[iteration, i] = greedy_runtime
+        _ = Envy_Graph_Elimination(students, courses)
+        envy_graph_runtime = time.time() - start_time
+        all_runtimes_envy_graph_courses[iteration, i] = envy_graph_runtime
+
+        # Measure runtime for U1 Algorithm
+        print(f"Running U1 Algorithm for {courses_count} courses")
+        start_time = time.time()
+        _ = EFX_Allocation_With_Bounded_Charity_U1(students, courses)
+        u1_runtime = time.time() - start_time
+        all_runtimes_u1_courses[iteration, i] = u1_runtime
 
 # Calculate means and standard deviations
 mean_runtimes_efx_courses = np.mean(all_runtimes_efx_courses, axis=0)
 mean_runtimes_ef1_courses = np.mean(all_runtimes_ef1_courses, axis=0)
-mean_runtimes_greedy_courses = np.mean(all_runtimes_greedy_courses, axis=0)
+mean_runtimes_envy_graph_courses = np.mean(all_runtimes_envy_graph_courses, axis=0)
+mean_runtimes_u1_courses = np.mean(all_runtimes_u1_courses, axis=0)
 std_runtimes_efx_courses = np.std(all_runtimes_efx_courses, axis=0, ddof=1)
 std_runtimes_ef1_courses = np.std(all_runtimes_ef1_courses, axis=0, ddof=1)
-std_runtimes_greedy_courses = np.std(all_runtimes_greedy_courses, axis=0, ddof=1)
+std_runtimes_envy_graph_courses = np.std(all_runtimes_envy_graph_courses, axis=0, ddof=1)
+std_runtimes_u1_courses = np.std(all_runtimes_u1_courses, axis=0, ddof=1)
 
 # Plot runtime comparison with error bars
 plt.figure(figsize=(10, 6))
@@ -76,14 +87,24 @@ plt.errorbar(
     label="CKMS"
 )
 
-# Plot EGE (Greedy Round Robin) with error bars
+# Plot EGE (Envy Graph Elimination) with error bars
 plt.errorbar(
     num_courses, 
-    mean_runtimes_greedy_courses, 
-    yerr=std_runtimes_greedy_courses, 
+    mean_runtimes_envy_graph_courses, 
+    yerr=std_runtimes_envy_graph_courses, 
     fmt='s-', 
     capsize=5, 
     label="EGE"
+)
+
+# Plot U1 with error bars
+plt.errorbar(
+    num_courses, 
+    mean_runtimes_u1_courses, 
+    yerr=std_runtimes_u1_courses, 
+    fmt='^-', 
+    capsize=5, 
+    label="U1"
 )
 
 # Add plot title and labels with larger font sizes

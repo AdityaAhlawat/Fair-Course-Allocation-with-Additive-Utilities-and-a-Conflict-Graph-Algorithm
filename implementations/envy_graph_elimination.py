@@ -1,7 +1,7 @@
 from classes.student import Student
 from collections import deque, defaultdict
 
-def Greedy_Round_Robin(students, courses):
+def Envy_Graph_Elimination(students, courses):
     # Create a virtual charity student
     charity = Student(student_id='charity', credit_cap=float('inf'), valuation_function={})
 

@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
-from implementations.Greedy_Round_Robin import Greedy_Round_Robin
-
+from implementations.algorithmForEFX_Bounded_Charity_U1 import EFX_Allocation_With_Bounded_Charity as EFX_Allocation_With_Bounded_Charity_U1
+from implementations.envy_graph_elimination import Envy_Graph_Elimination
 
 def MWIS(student, courses):
     """Find the Maximum Weighted Independent Set of courses considering the student's credit cap."""
@@ -77,7 +77,8 @@ num_iterations = 10
 # Arrays to store EF violations with respect to charity
 all_ef_violations_efx_charity = np.zeros((num_iterations, len(num_courses)))
 all_ef_violations_ef1_charity = np.zeros((num_iterations, len(num_courses)))  
-all_ef_violations_greedy_charity = np.zeros((num_iterations, len(num_courses)))
+all_ef_violations_envy_graph_charity = np.zeros((num_iterations, len(num_courses)))
+all_ef_violations_u1_charity = np.zeros((num_iterations, len(num_courses)))
 
 # Run experiments for increasing courses
 for iteration in range(num_iterations):
@@ -99,21 +100,28 @@ for iteration in range(num_iterations):
         ef_violation_count_ef1_charity = check_ef_violations_on_charity(allocation_ef1, students)
         all_ef_violations_ef1_charity[iteration, i] = ef_violation_count_ef1_charity
 
-        # Calculate EF violations for Greedy Round Robin with respect to charity
-        allocation_greedy = Greedy_Round_Robin(students, courses)
-        ef_violation_count_greedy_charity = check_ef_violations_on_charity(allocation_greedy, students)
-        all_ef_violations_greedy_charity[iteration, i] = ef_violation_count_greedy_charity
+        # Calculate EF violations for Envy Graph Elimination with respect to charity
+        allocation_envy_graph = Envy_Graph_Elimination(students, courses)
+        ef_violation_count_envy_graph_charity = check_ef_violations_on_charity(allocation_envy_graph, students)
+        all_ef_violations_envy_graph_charity[iteration, i] = ef_violation_count_envy_graph_charity
+
+        # Calculate EF violations for U1 algorithm with respect to charity
+        allocation_u1 = EFX_Allocation_With_Bounded_Charity_U1(students, courses)
+        ef_violation_count_u1_charity = check_ef_violations_on_charity(allocation_u1, students)
+        all_ef_violations_u1_charity[iteration, i] = ef_violation_count_u1_charity
 
         print(f"{num_course} courses completed for iteration {iteration + 1}")
 
 # Calculate means and standard deviations, ensuring no negative values
 mean_ef_violations_efx_charity = np.maximum(0, np.mean(all_ef_violations_efx_charity, axis=0))
 mean_ef_violations_ef1_charity = np.zeros(len(num_courses))  # Mean violations for "our algorithm" remain 0
-mean_ef_violations_greedy_charity = np.maximum(0, np.mean(all_ef_violations_greedy_charity, axis=0))
+mean_ef_violations_envy_graph_charity = np.maximum(0, np.mean(all_ef_violations_envy_graph_charity, axis=0))
+mean_ef_violations_u1_charity = np.maximum(0, np.mean(all_ef_violations_u1_charity, axis=0))
 
 std_ef_violations_efx_charity = np.maximum(0, np.std(all_ef_violations_efx_charity, axis=0, ddof=1))
 std_ef_violations_ef1_charity = np.zeros(len(num_courses))  # Standard deviations for "our algorithm" remain 0
-std_ef_violations_greedy_charity = np.maximum(0, np.std(all_ef_violations_greedy_charity, axis=0, ddof=1))
+std_ef_violations_envy_graph_charity = np.maximum(0, np.std(all_ef_violations_envy_graph_charity, axis=0, ddof=1))
+std_ef_violations_u1_charity = np.maximum(0, np.std(all_ef_violations_u1_charity, axis=0, ddof=1))
 # Adjust error bars to prevent crossing the zero line
 yerr_efx = [
     np.minimum(std_ef_violations_efx_charity, mean_ef_violations_efx_charity),
@@ -123,9 +131,13 @@ yerr_ef1 = [
     np.minimum(std_ef_violations_ef1_charity, mean_ef_violations_ef1_charity),
     std_ef_violations_ef1_charity
 ]
-yerr_greedy = [
-    np.minimum(std_ef_violations_greedy_charity, mean_ef_violations_greedy_charity),
-    std_ef_violations_greedy_charity
+yerr_envy_graph = [
+    np.minimum(std_ef_violations_envy_graph_charity, mean_ef_violations_envy_graph_charity),
+    std_ef_violations_envy_graph_charity
+]
+yerr_u1 = [
+    np.minimum(std_ef_violations_u1_charity, mean_ef_violations_u1_charity),
+    std_ef_violations_u1_charity
 ]
 
 # Plot EF violations comparison with averages (Charity) and standard deviation
@@ -154,11 +166,21 @@ plt.errorbar(
 # Plot EGE with error bars
 plt.errorbar(
     num_courses,
-    mean_ef_violations_greedy_charity,
-    yerr=yerr_greedy,
+    mean_ef_violations_envy_graph_charity,
+    yerr=yerr_envy_graph,
     fmt='s-',
     capsize=5,
     label="EGE"
+)
+
+# Plot U1 with error bars
+plt.errorbar(
+    num_courses,
+    mean_ef_violations_u1_charity,
+    yerr=yerr_u1,
+    fmt='^-',
+    capsize=5,
+    label="U1"
 )
 
 # Add plot title and labels

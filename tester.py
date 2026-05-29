@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
-from implementations.Greedy_Round_Robin import Greedy_Round_Robin
+from implementations.envy_graph_elimination import Envy_Graph_Elimination
 from implementations.checker import is_ef, is_ef1, is_efx
 import csv
 
@@ -23,9 +23,9 @@ allocation2 = EF1_CC_Plus_Allocation_Algorithm(students, courses)
 end = time.time()
 print("Total Time Taken for our Paper: " + str(end - start) + " seconds")
 start = time.time()
-allocation3 = Greedy_Round_Robin(students, courses)
+allocation3 = Envy_Graph_Elimination(students, courses)
 end = time.time()
-print("Total Time Taken for Greedy Round Robin: " + str(end - start) + " seconds")
+print("Total Time Taken for Envy Graph Elimination: " + str(end - start) + " seconds")
 
 
 #Lets find the social welfare of our allocation:

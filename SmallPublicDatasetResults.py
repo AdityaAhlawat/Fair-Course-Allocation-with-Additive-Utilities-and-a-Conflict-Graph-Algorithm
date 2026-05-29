@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 from classes.create_data import Data
 from implementations.algorithmForEF1_CC_Plus import EF1_CC_Plus_Allocation_Algorithm
 from implementations.algorithmForEFX_Bounded_Charity import EFX_Allocation_With_Bounded_Charity
-from implementations.Greedy_Round_Robin import Greedy_Round_Robin
+from implementations.algorithmForEFX_Bounded_Charity_U1 import EFX_Allocation_With_Bounded_Charity as EFX_Allocation_With_Bounded_Charity_U1
+from implementations.envy_graph_elimination import Envy_Graph_Elimination
 from implementations.checker import is_ef, is_ef1, is_efx
 
 data = {
@@ -72,7 +73,6 @@ students = custom_data.get_students()
 courses = custom_data.get_courses()
 
 start = time.time()
-# Perform round robin course assignment
 allocation1 = EFX_Allocation_With_Bounded_Charity(students, courses)
 end = time.time()
 print("Total Time Taken for CKMS: " + str(end - start) + " seconds")
@@ -80,6 +80,14 @@ start = time.time()
 allocation2 = EF1_CC_Plus_Allocation_Algorithm(students, courses)
 end = time.time()
 print("Total Time Taken for EGGI " + str(end - start) + " seconds")
+start = time.time()
+allocation3 = Envy_Graph_Elimination(students, courses)
+end = time.time()
+print("Total Time Taken for EGE: " + str(end - start) + " seconds")
+start = time.time()
+allocation4 = EFX_Allocation_With_Bounded_Charity_U1(students, courses)
+end = time.time()
+print("Total Time Taken for U1: " + str(end - start) + " seconds")
 
 print("CKMS ALGORITHM -----------------")
 #Lets find the social welfare of our allocation:
@@ -140,6 +148,78 @@ print("Maximum Value of Charity from any Student Valuation Function:", maxValueO
 for student in students:
     assigned_courses = allocation2[student.student_id]
     utility = student.utility(allocation2)
+    course_details = [
+        f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
+        for course in assigned_courses
+    ]
+    valuation_function_details = {
+        course_id: value for course_id, value in student.valuation_function.items()
+    }
+    
+    print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
+
+print("EGE ALGORITHM -----------------")
+
+#Lets find the social welfare of our allocation:
+if allocation3['charity']:
+    # Only compute max if there are students and courses in the 'charity' allocation
+    maxValueOfCharity = max(
+        student.get_valuation_function().get(course.course_id, 0) 
+        for course in allocation3['charity'] 
+        for student in students
+    )
+else:
+    maxValueOfCharity = 0 
+
+
+# Check for EF, EF1, and EFX
+print("Is EF:", is_ef(allocation3, students))
+print("Is EF1:", is_ef1(allocation3, students)) 
+print("Is EFX:", is_efx(allocation3, students))
+print("Maximum Value of Charity from any Student Valuation Function:", maxValueOfCharity)
+
+#What is Envy Ratio?
+
+# Print the assignments and utility for each student
+for student in students:
+    assigned_courses = allocation3[student.student_id]
+    utility = student.utility(allocation2)
+    course_details = [
+        f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
+        for course in assigned_courses
+    ]
+    valuation_function_details = {
+        course_id: value for course_id, value in student.valuation_function.items()
+    }
+    
+    print(f"Student {student.student_id} assigned courses: {course_details}, Utility: {utility}")
+
+print("U1 ALGORITHM -----------------")
+
+#Lets find the social welfare of our allocation:
+if allocation4['charity']:
+    # Only compute max if there are students and courses in the 'charity' allocation
+    maxValueOfCharity = max(
+        student.get_valuation_function().get(course.course_id, 0) 
+        for course in allocation4['charity'] 
+        for student in students
+    )
+else:
+    maxValueOfCharity = 0 
+
+
+# Check for EF, EF1, and EFX
+print("Is EF:", is_ef(allocation4, students))
+print("Is EF1:", is_ef1(allocation4, students)) 
+print("Is EFX:", is_efx(allocation4, students))
+print("Maximum Value of Charity from any Student Valuation Function:", maxValueOfCharity)
+
+#What is Envy Ratio?
+
+# Print the assignments and utility for each student
+for student in students:
+    assigned_courses = allocation4[student.student_id]
+    utility = student.utility(allocation4)
     course_details = [
         f"Course {course.course_id} (Start: {course.start_time}, End: {course.end_time})"
         for course in assigned_courses
