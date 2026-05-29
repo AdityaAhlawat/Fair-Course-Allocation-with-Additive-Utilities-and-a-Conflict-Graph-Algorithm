@@ -29,8 +29,8 @@ def EFX_Allocation_With_Bounded_Charity(students, courses):
 
 def is_any_rule_applicable(students, allocation, pool, envy_graph):
     # Check if any of the update rules (U0, U1, U2) are applicable
-    return is_u1_applicable(students, allocation, pool)
-    #return is_u0_applicable(students, allocation, pool, envy_graph) or is_u1_applicable(students, allocation, pool) #or is_u2_applicable(students, allocation, pool, envy_graph)
+    #return is_u1_applicable(students, allocation, pool)
+    return is_u0_applicable(students, allocation, pool, envy_graph) or is_u1_applicable(students, allocation, pool) #or is_u2_applicable(students, allocation, pool, envy_graph)
 
 def is_u0_applicable(students, allocation, pool, envy_graph):
     # Check if U0 is applicable
