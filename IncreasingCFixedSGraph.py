@@ -54,15 +54,15 @@ for iteration in range(num_iterations):
         u1_runtime = time.time() - start_time
         all_runtimes_u1_courses[iteration, i] = u1_runtime
 
-# Calculate means and standard deviations
+# Calculate means and standard errors
 mean_runtimes_efx_courses = np.mean(all_runtimes_efx_courses, axis=0)
 mean_runtimes_ef1_courses = np.mean(all_runtimes_ef1_courses, axis=0)
 mean_runtimes_envy_graph_courses = np.mean(all_runtimes_envy_graph_courses, axis=0)
 mean_runtimes_u1_courses = np.mean(all_runtimes_u1_courses, axis=0)
-std_runtimes_efx_courses = np.std(all_runtimes_efx_courses, axis=0, ddof=1)
-std_runtimes_ef1_courses = np.std(all_runtimes_ef1_courses, axis=0, ddof=1)
-std_runtimes_envy_graph_courses = np.std(all_runtimes_envy_graph_courses, axis=0, ddof=1)
-std_runtimes_u1_courses = np.std(all_runtimes_u1_courses, axis=0, ddof=1)
+stderr_runtimes_efx_courses = np.std(all_runtimes_efx_courses, axis=0, ddof=1) / np.sqrt(num_iterations)
+stderr_runtimes_ef1_courses = np.std(all_runtimes_ef1_courses, axis=0, ddof=1) / np.sqrt(num_iterations)
+stderr_runtimes_envy_graph_courses = np.std(all_runtimes_envy_graph_courses, axis=0, ddof=1) / np.sqrt(num_iterations)
+stderr_runtimes_u1_courses = np.std(all_runtimes_u1_courses, axis=0, ddof=1) / np.sqrt(num_iterations)
 
 # Plot runtime comparison with error bars
 plt.figure(figsize=(10, 6))
@@ -71,7 +71,7 @@ plt.figure(figsize=(10, 6))
 plt.errorbar(
     num_courses, 
     mean_runtimes_ef1_courses, 
-    yerr=std_runtimes_ef1_courses, 
+    yerr=stderr_runtimes_ef1_courses, 
     fmt='x-', 
     capsize=5, 
     label="EGGI"
@@ -81,7 +81,7 @@ plt.errorbar(
 plt.errorbar(
     num_courses, 
     mean_runtimes_efx_courses, 
-    yerr=std_runtimes_efx_courses, 
+    yerr=stderr_runtimes_efx_courses, 
     fmt='o-', 
     capsize=5, 
     label="CKMS"
@@ -91,7 +91,7 @@ plt.errorbar(
 plt.errorbar(
     num_courses, 
     mean_runtimes_envy_graph_courses, 
-    yerr=std_runtimes_envy_graph_courses, 
+    yerr=stderr_runtimes_envy_graph_courses, 
     fmt='s-', 
     capsize=5, 
     label="EGE"
@@ -101,7 +101,7 @@ plt.errorbar(
 plt.errorbar(
     num_courses, 
     mean_runtimes_u1_courses, 
-    yerr=std_runtimes_u1_courses, 
+    yerr=stderr_runtimes_u1_courses, 
     fmt='^-', 
     capsize=5, 
     label="U1"
