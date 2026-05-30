@@ -113,25 +113,25 @@ for iteration in range(num_iterations):
 
         print(f"{num_course} courses completed for iteration {iteration + 1}")
 
-# Calculate means and standard deviations, ensuring no negative values
+# Calculate means and standard errors, ensuring no negative values
 mean_ef_violations_efx = np.maximum(0, np.mean(all_ef_violations_efx, axis=0))
 mean_ef_violations_ef1 = np.maximum(0, np.mean(all_ef_violations_ef1, axis=0))
 mean_ef_violations_envy_graph = np.maximum(0, np.mean(all_ef_violations_count_envy, axis=0))
 mean_ef_violations_u1 = np.maximum(0, np.mean(all_ef_violations_u1, axis=0))
 
-std_ef_violations_efx = np.maximum(0, np.std(all_ef_violations_efx, axis=0, ddof=1))
-std_ef_violations_ef1 = np.maximum(0, np.std(all_ef_violations_ef1, axis=0, ddof=1))
-std_ef_violations_envy_graph = np.maximum(0, np.std(all_ef_violations_count_envy, axis=0, ddof=1))
-std_ef_violations_u1 = np.maximum(0, np.std(all_ef_violations_u1, axis=0, ddof=1))
+stderr_ef_violations_efx = np.maximum(0, np.std(all_ef_violations_efx, axis=0, ddof=1) / np.sqrt(num_iterations))
+stderr_ef_violations_ef1 = np.maximum(0, np.std(all_ef_violations_ef1, axis=0, ddof=1) / np.sqrt(num_iterations))
+stderr_ef_violations_envy_graph = np.maximum(0, np.std(all_ef_violations_count_envy, axis=0, ddof=1) / np.sqrt(num_iterations))
+stderr_ef_violations_u1 = np.maximum(0, np.std(all_ef_violations_u1, axis=0, ddof=1) / np.sqrt(num_iterations))
 
-# Plot EF violations comparison with averages and standard deviations
+# Plot EF violations comparison with averages and standard error
 plt.figure(figsize=(10, 6))
 
 # Plot EGGI with error bars
 plt.errorbar(
     num_courses,
     mean_ef_violations_ef1,
-    yerr=std_ef_violations_ef1,
+    yerr=stderr_ef_violations_ef1,
     fmt='x-',
     capsize=5,
     label="EGGI"
@@ -141,7 +141,7 @@ plt.errorbar(
 plt.errorbar(
     num_courses,
     mean_ef_violations_efx,
-    yerr=std_ef_violations_efx,
+    yerr=stderr_ef_violations_efx,
     fmt='o-',
     capsize=5,
     label="CKMS"
@@ -151,7 +151,7 @@ plt.errorbar(
 plt.errorbar(
     num_courses,
     mean_ef_violations_envy_graph,
-    yerr=std_ef_violations_envy_graph,
+    yerr=stderr_ef_violations_envy_graph,
     fmt='s-',
     capsize=5,
     label="EGE"
@@ -161,7 +161,7 @@ plt.errorbar(
 plt.errorbar(
     num_courses,
     mean_ef_violations_u1,
-    yerr=std_ef_violations_u1,
+    yerr=stderr_ef_violations_u1,
     fmt='^-',
     capsize=5,
     label="U1"
