@@ -112,35 +112,35 @@ for iteration in range(num_iterations):
 
         print(f"{num_course} courses completed for iteration {iteration + 1}")
 
-# Calculate means and standard deviations, ensuring no negative values
+# Calculate means and standard errors, ensuring no negative values
 mean_ef_violations_efx_charity = np.maximum(0, np.mean(all_ef_violations_efx_charity, axis=0))
 mean_ef_violations_ef1_charity = np.zeros(len(num_courses))  # Mean violations for "our algorithm" remain 0
 mean_ef_violations_envy_graph_charity = np.maximum(0, np.mean(all_ef_violations_envy_graph_charity, axis=0))
 mean_ef_violations_u1_charity = np.maximum(0, np.mean(all_ef_violations_u1_charity, axis=0))
 
-std_ef_violations_efx_charity = np.maximum(0, np.std(all_ef_violations_efx_charity, axis=0, ddof=1))
-std_ef_violations_ef1_charity = np.zeros(len(num_courses))  # Standard deviations for "our algorithm" remain 0
-std_ef_violations_envy_graph_charity = np.maximum(0, np.std(all_ef_violations_envy_graph_charity, axis=0, ddof=1))
-std_ef_violations_u1_charity = np.maximum(0, np.std(all_ef_violations_u1_charity, axis=0, ddof=1))
+stderr_ef_violations_efx_charity = np.maximum(0, np.std(all_ef_violations_efx_charity, axis=0, ddof=1) / np.sqrt(num_iterations))
+stderr_ef_violations_ef1_charity = np.zeros(len(num_courses))  # Standard errors for "our algorithm" remain 0
+stderr_ef_violations_envy_graph_charity = np.maximum(0, np.std(all_ef_violations_envy_graph_charity, axis=0, ddof=1) / np.sqrt(num_iterations))
+stderr_ef_violations_u1_charity = np.maximum(0, np.std(all_ef_violations_u1_charity, axis=0, ddof=1) / np.sqrt(num_iterations))
 # Adjust error bars to prevent crossing the zero line
 yerr_efx = [
-    np.minimum(std_ef_violations_efx_charity, mean_ef_violations_efx_charity),
-    std_ef_violations_efx_charity
+    np.minimum(stderr_ef_violations_efx_charity, mean_ef_violations_efx_charity),
+    stderr_ef_violations_efx_charity
 ]
 yerr_ef1 = [
-    np.minimum(std_ef_violations_ef1_charity, mean_ef_violations_ef1_charity),
-    std_ef_violations_ef1_charity
+    np.minimum(stderr_ef_violations_ef1_charity, mean_ef_violations_ef1_charity),
+    stderr_ef_violations_ef1_charity
 ]
 yerr_envy_graph = [
-    np.minimum(std_ef_violations_envy_graph_charity, mean_ef_violations_envy_graph_charity),
-    std_ef_violations_envy_graph_charity
+    np.minimum(stderr_ef_violations_envy_graph_charity, mean_ef_violations_envy_graph_charity),
+    stderr_ef_violations_envy_graph_charity
 ]
 yerr_u1 = [
-    np.minimum(std_ef_violations_u1_charity, mean_ef_violations_u1_charity),
-    std_ef_violations_u1_charity
+    np.minimum(stderr_ef_violations_u1_charity, mean_ef_violations_u1_charity),
+    stderr_ef_violations_u1_charity
 ]
 
-# Plot EF violations comparison with averages (Charity) and standard deviation
+# Plot EF violations comparison with averages (Charity) and standard error
 plt.figure(figsize=(10, 6))
 
 # Plot EGGI with error bars
